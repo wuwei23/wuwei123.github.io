@@ -152,6 +152,97 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-深度学习softmax回归" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/">深度学习softmax回归</a>
+    </h1>
+  
+
+        
+        <a href="/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/" class="archive-article-date">
+  	<time datetime="2020-10-15T10:53:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-10-15</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>softmax回归预测多分类问题，预测值的输出为每一个样本所属q个类别的概率，比如一个样本有三个类别，则输出可能为[0.1, 0.8, 0.1],表示该样本属于第二个类别。</p>
+<p>花书中的softmax回归介绍相对简单，主要思想是使用softmax函数将预测值转化为值为正且和为1的概率</p>
+<center>$ O = XW +b $</center>
+
+<center>$ \hat{y} = softmax(O) $</center>
+
+<p>如在上述公式中，若O的预测值为0.1，10，0.1，那么经过softmax函数，这三个预测输出大概变为0.01，0.98，0.1，这样输出中为类别2的概率最大，据此判断预测类别为2</p>
+<p>同时，softmax使用交叉熵作为损失函数，因为交叉熵损失更偏重于概率大的那个值，而我们只需要将输出概率大的类别作为最终类别就行。</p>
+<p>具体代码</p>
+<p>这里书中的load_data_fashion_mnist(batch_size)函数是使用的d2l包中的函数，但是我们已经将FashionMNIST数据集下载到本地，不用重新下载，因此安前边代码，自己重写这个函数</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> d2lzh <span class="keyword">as</span> d2l</span><br><span class="line"><span class="keyword">from</span> mxnet <span class="keyword">import</span> autograd,nd</span><br><span class="line"><span class="keyword">import</span> mxnet <span class="keyword">as</span> mx</span><br><span class="line"><span class="keyword">from</span> mxnet.gluon <span class="keyword">import</span> data <span class="keyword">as</span> gdata</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">load_data_fashion_mnist</span>(<span class="params">batch_size</span>):</span></span><br><span class="line">    mnist_train = gdata.vision.FashionMNIST(root=<span class="string">r&#x27;C:/Users/Wu/AppData/Roaming/mxnet/datasets/fashion-mnist/&#x27;</span>,train=<span class="literal">True</span>)</span><br><span class="line">    mnist_test = gdata.vision.FashionMNIST(root=<span class="string">r&#x27;C:/Users/Wu/AppData/Roaming/mxnet/datasets/fashion-mnist/&#x27;</span>,train=<span class="literal">False</span>)</span><br><span class="line">    transformer = gdata.vision.transforms.ToTensor()</span><br><span class="line">    <span class="keyword">if</span> sys.platform.startswith(<span class="string">&#x27;win&#x27;</span>):</span><br><span class="line">        num_workers = <span class="number">0</span>  <span class="comment"># 表示不用额外进程来加速读取数据</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        num_workers = <span class="number">4</span></span><br><span class="line"> </span><br><span class="line">    train_iter = gdata.DataLoader(mnist_train.transform_first(transformer), batch_size, shuffle=<span class="literal">True</span>,num_workers=num_workers)</span><br><span class="line">    test_iter = gdata.DataLoader(mnist_test.transform_first(transformer), batch_size, shuffle=<span class="literal">False</span>,num_workers=num_workers)</span><br><span class="line">    <span class="keyword">return</span> train_iter,test_iter</span><br><span class="line"> </span><br><span class="line"><span class="comment">#小批量数据集</span></span><br><span class="line">batch_size = <span class="number">256</span></span><br><span class="line">train_iter, test_iter = load_data_fashion_mnist((batch_size))</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"><span class="comment"># print(len(train_iter))</span></span><br><span class="line"><span class="comment">#使用向量表示每个样本，所以将二维的变成一维的</span></span><br><span class="line">num_inputs = <span class="number">784</span> <span class="comment">#28*28回归权重</span></span><br><span class="line">num_outputs = <span class="number">10</span> <span class="comment">#10个类别，偏差参数</span></span><br><span class="line"> </span><br><span class="line">w = nd.random.normal(scale=<span class="number">0.01</span>, shape=(num_inputs,num_outputs),ctx=mx.gpu())</span><br><span class="line">b = nd.zeros(num_outputs,ctx=mx.gpu())</span><br><span class="line"> </span><br><span class="line">w.attach_grad()</span><br><span class="line">b.attach_grad()</span><br><span class="line"> </span><br><span class="line"><span class="comment">#定义softmax函数，只是把矩阵进行指数变换</span></span><br><span class="line"><span class="comment">#输入行为样本数，列为输出个数；输出每一行和为一，代表这个样本属于一个类别的概率</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">softmax</span>(<span class="params">x</span>):</span></span><br><span class="line">    x_exp = x.exp()</span><br><span class="line">    partition = x_exp.sum(axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)<span class="comment">#1为行求和</span></span><br><span class="line">    <span class="keyword">return</span> x_exp / partition <span class="comment">#广播机制</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">#定义模型</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">net</span>(<span class="params">x</span>):</span></span><br><span class="line">    <span class="keyword">return</span> softmax(nd.dot(x.reshape((<span class="number">-1</span>,num_inputs)),w) + b)</span><br><span class="line"> </span><br><span class="line">y_hat = nd.array([[<span class="number">0.1</span>,<span class="number">0.3</span>,<span class="number">0.6</span>],[<span class="number">0.3</span>,<span class="number">0.2</span>,<span class="number">0.5</span>]])</span><br><span class="line">y = nd.array([<span class="number">0</span>,<span class="number">2</span>],dtype = <span class="string">&#x27;int32&#x27;</span>)</span><br><span class="line"> </span><br><span class="line"><span class="comment">#示例pick函数</span></span><br><span class="line">print(nd.pick(y_hat,y))</span><br><span class="line"><span class="comment">#损失函数</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">cross_entropy</span>(<span class="params">y_hat,y</span>):</span></span><br><span class="line">    <span class="keyword">return</span> -nd.pick(y_hat,y).log()</span><br><span class="line"> </span><br><span class="line"><span class="comment">#分类准确率：正确预测数量与总预测数量之比</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">accuracy</span>(<span class="params">y_hat, y</span>):</span></span><br><span class="line">    <span class="comment">#y_hat.argmax(axis=1)返回每行最大的元素的索引，mean取值为1的占总数的比</span></span><br><span class="line">    <span class="keyword">return</span> (y_hat.argmax(axis=<span class="number">1</span>) == y.astype(<span class="string">&#x27;float32&#x27;</span>)).mean().asscalar()<span class="comment">#返回一个NDArray</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">#示例</span></span><br><span class="line">print((y_hat.argmax(axis=<span class="number">1</span>) == y.astype(<span class="string">&#x27;float32&#x27;</span>)))</span><br><span class="line">print(accuracy(y_hat,y))</span><br><span class="line"> </span><br><span class="line"><span class="comment">#评价模型net在数据集上的精确度</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">evaluate_accuracy</span>(<span class="params">data_iter, net</span>):</span></span><br><span class="line">    <span class="comment">#分布准确的数量除以总数</span></span><br><span class="line">    acc_sum, n = <span class="number">0.0</span>, <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> x, y <span class="keyword">in</span> data_iter:</span><br><span class="line">        x = x.copyto(mx.gpu())</span><br><span class="line">        y = y.copyto(mx.gpu())</span><br><span class="line">        y = y.astype(<span class="string">&#x27;float32&#x27;</span>)</span><br><span class="line">        acc_sum += (net(x).argmax(axis=<span class="number">1</span>) == y).sum().asscalar()</span><br><span class="line">        n += y.size</span><br><span class="line">    <span class="keyword">return</span> acc_sum / n</span><br><span class="line"><span class="comment">#随机初始变量，所以此时精度应该接近0.1</span></span><br><span class="line">print(evaluate_accuracy(test_iter,net))</span><br><span class="line"> </span><br><span class="line">num_epochs, lr = <span class="number">5</span>, <span class="number">0.1</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">train_ch3</span>(<span class="params">net, train_iter, test_iter, loss, num_epochs, batch_size, params=None, lr=None, trainer=None</span>):</span></span><br><span class="line">    <span class="keyword">for</span> epoch <span class="keyword">in</span> range(num_epochs):</span><br><span class="line">        <span class="comment"># 总的损失# 总的准确率</span></span><br><span class="line">        train_loss_sum , train_acc_sum, n = <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> X, y <span class="keyword">in</span> train_iter:</span><br><span class="line">            X = X.copyto(mx.gpu())</span><br><span class="line">            y = y.copyto(mx.gpu())</span><br><span class="line">            <span class="keyword">with</span> autograd.record():</span><br><span class="line">                y_hat = net(X)</span><br><span class="line">                los = loss(y_hat, y).sum()</span><br><span class="line">            <span class="comment"># 求梯度</span></span><br><span class="line">            los.backward()</span><br><span class="line">            <span class="keyword">if</span> trainer <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">                <span class="comment"># 小批量随机梯度下降</span></span><br><span class="line">                d2l.sgd(params, lr, batch_size)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                trainer.step(batch_size)</span><br><span class="line">            train_loss_sum += los.asscalar()</span><br><span class="line">            train_acc_sum += accuracy(y_hat, y)</span><br><span class="line">            n += y.size</span><br><span class="line">        test_acc = evaluate_accuracy(test_iter,net)</span><br><span class="line">        print(<span class="string">&#x27;epoch %d, loss %.4f, train acc %.3f, test acc %.3f&#x27;</span></span><br><span class="line">              % (epoch + <span class="number">1</span>, train_loss_sum / n, train_acc_sum / n,test_acc))</span><br><span class="line"> </span><br><span class="line">train_ch3(net,train_iter,test_iter,cross_entropy,num_epochs,batch_size,[w,b],lr)</span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">softmax回归</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-深度学习线性回归简易实现代码gpu版" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -186,7 +277,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">-深度学习 线性回归 -gpu</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">线性回归</a>
         		</li>
       		
 		</ul>
@@ -260,7 +359,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">-深度学习 -线性回归 -gpu</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">线性回归</a>
         		</li>
       		
 		</ul>
@@ -414,11 +521,19 @@ MathJax.Hub.Queue(function() {
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">-深度学习 -线性回归 -gpu</a>
+                <a href="javascript:void(0)" class="js-tag color5">深度学习</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">-深度学习 线性回归 -gpu</a>
+                <a href="javascript:void(0)" class="js-tag color5">softmax回归</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">gpu</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">线性回归</a>
               </li>
             
             <div class="clearfix"></div>
