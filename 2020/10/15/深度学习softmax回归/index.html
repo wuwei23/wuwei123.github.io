@@ -8,15 +8,15 @@
   <link rel="dns-prefetch" href="http://example.com">
   <title>深度学习softmax回归 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="softmax回归预测多分类问题，预测值的输出为每一个样本所属q个类别的概率，比如一个样本有三个类别，则输出可能为[0.1, 0.8, 0.1],表示该样本属于第二个类别。 花书中的softmax回归介绍相对简单，主要思想是使用softmax函数将预测值转化为值为正且和为1的概率 $ O &#x3D; XW +b $  $ \hat{y} &#x3D; softmax(O) $  如在上述公式中，若O的预测值为0.1">
+  <meta name="description" content="softmax回归预测多分类问题，预测值的输出为每一个样本所属q个类别的概率，比如一个样本有三个类别，则输出可能为[0.1, 0.8, 0.1],表示该样本属于第二个类别。 花书中的softmax回归介绍相对简单，主要思想是使用softmax函数将预测值转化为值为正且和为1的概率">
 <meta property="og:type" content="article">
 <meta property="og:title" content="深度学习softmax回归">
 <meta property="og:url" content="http://example.com/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="softmax回归预测多分类问题，预测值的输出为每一个样本所属q个类别的概率，比如一个样本有三个类别，则输出可能为[0.1, 0.8, 0.1],表示该样本属于第二个类别。 花书中的softmax回归介绍相对简单，主要思想是使用softmax函数将预测值转化为值为正且和为1的概率 $ O &#x3D; XW +b $  $ \hat{y} &#x3D; softmax(O) $  如在上述公式中，若O的预测值为0.1">
+<meta property="og:description" content="softmax回归预测多分类问题，预测值的输出为每一个样本所属q个类别的概率，比如一个样本有三个类别，则输出可能为[0.1, 0.8, 0.1],表示该样本属于第二个类别。 花书中的softmax回归介绍相对简单，主要思想是使用softmax函数将预测值转化为值为正且和为1的概率">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-10-15T10:53:28.000Z">
-<meta property="article:modified_time" content="2020-10-15T11:07:09.588Z">
+<meta property="article:modified_time" content="2020-10-15T11:47:52.872Z">
 <meta property="article:author" content="wuwei23">
 <meta property="article:tag" content="深度学习">
 <meta property="article:tag" content="softmax回归">
@@ -179,6 +179,8 @@
       
         <p>softmax回归预测多分类问题，预测值的输出为每一个样本所属q个类别的概率，比如一个样本有三个类别，则输出可能为[0.1, 0.8, 0.1],表示该样本属于第二个类别。</p>
 <p>花书中的softmax回归介绍相对简单，主要思想是使用softmax函数将预测值转化为值为正且和为1的概率</p>
+<a id="more"></a>
+
 <center>$ O = XW +b $</center>
 
 <center>$ \hat{y} = softmax(O) $</center>
