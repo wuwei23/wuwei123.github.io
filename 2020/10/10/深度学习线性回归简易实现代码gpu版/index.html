@@ -6,14 +6,21 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://wuwei23.github.io">
-  <title>Archives: 2022 | Hexo</title>
+  <title>深度学习线性回归简易实现代码gpu版 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://wuwei23.github.io/archives/2022/index.html">
+  <meta name="description" content="代码为深度学习一书线性回归使用python库版本的代码，使用gpu时首先将数据全部存储在gpu，注意在提取小批量数据集时的函数默认将生成的数据存储在cpu，所以需要在使用时转到gpu，具体为代码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深度学习线性回归简易实现代码gpu版">
+<meta property="og:url" content="https://wuwei23.github.io/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%AE%80%E6%98%93%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81gpu%E7%89%88/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="代码为深度学习一书线性回归使用python库版本的代码，使用gpu时首先将数据全部存储在gpu，注意在提取小批量数据集时的函数默认将生成的数据存储在cpu，所以需要在使用时转到gpu，具体为代码">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-10-10T12:03:59.000Z">
+<meta property="article:modified_time" content="2020-10-15T10:54:26.000Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="gpu">
+<meta property="article:tag" content="线性回归">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
@@ -150,49 +157,196 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-深度学习线性回归简易实现代码gpu版" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2022" class="archive-year">2022</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2022/03/25/hello-world/" class="archive-article-date">
-  	<time datetime="2022-03-25T08:51:12.425Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-03-25</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/03/25/hello-world/">Hello World</a>
+    <h1 class="article-title" itemprop="name">
+      深度学习线性回归简易实现代码gpu版
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
-          
+        
+        <a href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%AE%80%E6%98%93%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81gpu%E7%89%88/" class="archive-article-date">
+  	<time datetime="2020-10-10T12:03:59.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-10-10</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>代码为深度学习一书线性回归使用python库版本的代码，使用gpu时首先将数据全部存储在gpu，<br>注意在提取小批量数据集时的函数默认将生成的数据存储在cpu，所以需要在使用时转到gpu，具体为代码</p>
+<span id="more"></span>
 
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> mxnet <span class="keyword">import</span> autograd,nd</span><br><span class="line"><span class="keyword">from</span> mxnet.gluon <span class="keyword">import</span> data <span class="keyword">as</span> gdata</span><br><span class="line"><span class="keyword">from</span> mxnet.gluon <span class="keyword">import</span> loss <span class="keyword">as</span> gloss</span><br><span class="line"><span class="keyword">from</span> mxnet.gluon <span class="keyword">import</span> nn</span><br><span class="line"><span class="keyword">from</span> mxnet <span class="keyword">import</span> gluon</span><br><span class="line"><span class="keyword">from</span> mxnet <span class="keyword">import</span> init</span><br><span class="line"><span class="keyword">import</span> mxnet <span class="keyword">as</span> mx</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"><span class="comment">#生成数据集</span></span><br><span class="line">nums_input = <span class="number">2</span><span class="comment">#特征数</span></span><br><span class="line">num_examples = <span class="number">1000</span><span class="comment">#数据个数</span></span><br><span class="line">true_w = [<span class="number">2</span>,-<span class="number">3.4</span>]<span class="comment">#真实权重w</span></span><br><span class="line">true_b = <span class="number">4.2</span><span class="comment">#真实权重b</span></span><br><span class="line">features = nd.random.normal(scale=<span class="number">1</span>,shape=(num_examples,nums_input),ctx=mx.gpu())<span class="comment">#标准差为1</span></span><br><span class="line">labels = true_w[<span class="number">0</span>] * features[:,<span class="number">0</span>] + true_w[<span class="number">1</span>] * features[:,<span class="number">1</span>] + true_b</span><br><span class="line">labels += nd.random.normal(scale=<span class="number">0.01</span>,shape=labels.shape,ctx=mx.gpu())<span class="comment">#噪声</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"><span class="comment">#读取小批量数据集</span></span><br><span class="line">batch_size = <span class="number">10</span></span><br><span class="line"><span class="comment">#将训练数据的特征和标签结合</span></span><br><span class="line">dataset = gdata.ArrayDataset(features,labels)</span><br><span class="line"><span class="comment">#随机读取小批量，shuffle随机</span></span><br><span class="line">data_iter = gdata.DataLoader(dataset,batch_size,shuffle=<span class="literal">True</span>)</span><br><span class="line"> </span><br><span class="line"><span class="comment">#定义模型</span></span><br><span class="line">net = nn.Sequential()</span><br><span class="line"><span class="comment">#全连接层-输出层</span></span><br><span class="line">net.add(nn.Dense(<span class="number">1</span>))</span><br><span class="line"> </span><br><span class="line"><span class="comment">#参数初始化</span></span><br><span class="line">net.initialize(init.Normal(sigma=<span class="number">0.01</span>),ctx=mx.gpu())</span><br><span class="line"> </span><br><span class="line"><span class="comment">#定义损失函数</span></span><br><span class="line">loss = gloss.L2Loss()</span><br><span class="line"> </span><br><span class="line"><span class="comment">#定义优化算法</span></span><br><span class="line">trainer = gluon.Trainer(net.collect_params(),<span class="string">&#x27;sgd&#x27;</span>,&#123;<span class="string">&#x27;learning_rate&#x27;</span>: <span class="number">0.03</span>&#125;)</span><br><span class="line"> </span><br><span class="line">num_epochs = <span class="number">3</span></span><br><span class="line"><span class="comment">#训练模型</span></span><br><span class="line"><span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, num_epochs+<span class="number">1</span>):</span><br><span class="line">    <span class="comment">#每一个迭代周期，使用训练集所有样本一次</span></span><br><span class="line">    <span class="keyword">for</span> X,y <span class="keyword">in</span> data_iter:</span><br><span class="line">        y = y.copyto(mx.gpu())<span class="comment">#数据传到gpu</span></span><br><span class="line">        <span class="keyword">with</span> autograd.record():</span><br><span class="line">            l = loss(net(X),y)</span><br><span class="line">        l.backward()</span><br><span class="line">        trainer.step(batch_size)</span><br><span class="line">    l = loss(net(features),labels)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;epoch %d, loss %f&#x27;</span> % (epoch,l.mean().asnumpy()))</span><br><span class="line"> </span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/img/alipi.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/img/weixin.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">线性回归</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://wuwei23.github.io/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%AE%80%E6%98%93%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81gpu%E7%89%88/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          深度学习softmax回归
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0gpu%E7%89%88/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">深度学习线性回归从零实现代码实现gpu版</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -215,8 +369,8 @@
 	var yiliaConfig = {
 		mathjax: true,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

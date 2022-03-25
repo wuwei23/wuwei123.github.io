@@ -227,6 +227,335 @@
 
 
   
+    <article id="post-深度学习softmax回归gpu" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/10/19/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92gpu/">深度学习softmax回归gpu</a>
+    </h1>
+  
+
+        
+        <a href="/2020/10/19/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92gpu/" class="archive-article-date">
+  	<time datetime="2020-10-19T12:16:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-10-19</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>由于书中fashion_MNIST数据集的加载需要联网下载，而我们已经下好，因此使用自己写的加载函数，同时，由于train_ch3无法进行gpu计算，同样对其进行重写。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> d2lzh <span class="keyword">as</span> d2l</span><br><span class="line"><span class="keyword">import</span> mxnet <span class="keyword">as</span> mx</span><br><span class="line"><span class="keyword">from</span> mxnet <span class="keyword">import</span> gluon, init,autograd</span><br><span class="line"><span class="keyword">from</span> mxnet.gluon <span class="keyword">import</span> loss <span class="keyword">as</span> gloss,nn</span><br><span class="line"><span class="keyword">from</span> mxnet.gluon <span class="keyword">import</span> data <span class="keyword">as</span> gdata</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"> </span><br><span class="line"><span class="comment">#获取数据</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load_data_fashion_mnist</span>(<span class="params">batch_size</span>):</span><br><span class="line">    mnist_train = gdata.vision.FashionMNIST(root=<span class="string">r&#x27;C:/Users/Wu/AppData/Roaming/mxnet/datasets/fashion-mnist/&#x27;</span>,train=<span class="literal">True</span>)</span><br><span class="line">    mnist_test = gdata.vision.FashionMNIST(root=<span class="string">r&#x27;C:/Users/Wu/AppData/Roaming/mxnet/datasets/fashion-mnist/&#x27;</span>,train=<span class="literal">False</span>)</span><br><span class="line">    transformer = gdata.vision.transforms.ToTensor()</span><br><span class="line">    <span class="keyword">if</span> sys.platform.startswith(<span class="string">&#x27;win&#x27;</span>):</span><br><span class="line">        num_workers = <span class="number">0</span>  <span class="comment"># 表示不用额外进程来加速读取数据</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        num_workers = <span class="number">4</span></span><br><span class="line"> </span><br><span class="line">    train_iter = gdata.DataLoader(mnist_train.transform_first(transformer), batch_size, shuffle=<span class="literal">True</span>,num_workers=num_workers)</span><br><span class="line">    test_iter = gdata.DataLoader(mnist_test.transform_first(transformer), batch_size, shuffle=<span class="literal">False</span>,num_workers=num_workers)</span><br><span class="line">    <span class="keyword">return</span> train_iter,test_iter</span><br><span class="line"> </span><br><span class="line"><span class="comment">#小批量数据集</span></span><br><span class="line">batch_size = <span class="number">256</span></span><br><span class="line">train_iter, test_iter = load_data_fashion_mnist((batch_size))</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"><span class="comment">#定义初始化模型</span></span><br><span class="line">net = nn.Sequential()</span><br><span class="line">net.add(nn.Dense(<span class="number">10</span>))<span class="comment">#输出为10</span></span><br><span class="line">net.initialize(init.Normal(sigma=<span class="number">0.01</span>),ctx=mx.gpu())<span class="comment">#初始化权重参数</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">#交叉熵损失</span></span><br><span class="line">loss = gloss.SoftmaxCrossEntropyLoss()</span><br><span class="line"> </span><br><span class="line"><span class="comment">#优化算法</span></span><br><span class="line">trainer = gluon.Trainer(net.collect_params(),<span class="string">&#x27;sgd&#x27;</span>,&#123;<span class="string">&#x27;learning_rate&#x27;</span>:<span class="number">0.1</span>&#125;)</span><br><span class="line"> </span><br><span class="line"><span class="comment">#训练模型</span></span><br><span class="line">num_epochs = <span class="number">5</span></span><br><span class="line"><span class="comment">#cpu计算</span></span><br><span class="line"><span class="comment"># d2l.train_ch3(net,train_iter,test_iter,loss,num_epochs,batch_size,None,None,trainer)</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">#gpu计算，重写train_ch3</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">#评价模型net在数据集上的精确度</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">evaluate_accuracy</span>(<span class="params">data_iter, net</span>):</span><br><span class="line">    <span class="comment">#分布准确的数量除以总数</span></span><br><span class="line">    acc_sum, n = <span class="number">0.0</span>, <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> x, y <span class="keyword">in</span> data_iter:</span><br><span class="line">        x = x.copyto(mx.gpu())</span><br><span class="line">        y = y.copyto(mx.gpu())</span><br><span class="line">        y = y.astype(<span class="string">&#x27;float32&#x27;</span>)</span><br><span class="line">        acc_sum += (net(x).argmax(axis=<span class="number">1</span>) == y).<span class="built_in">sum</span>().asscalar()</span><br><span class="line">        n += y.size</span><br><span class="line">    <span class="keyword">return</span> acc_sum / n</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">train_ch3</span>(<span class="params">net, train_iter, test_iter, loss, num_epochs, batch_size, params=<span class="literal">None</span>, lr=<span class="literal">None</span>, trainer=<span class="literal">None</span></span>):</span><br><span class="line">    <span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(num_epochs):</span><br><span class="line">        <span class="comment"># 总的损失# 总的准确率</span></span><br><span class="line">        train_loss_sum , train_acc_sum, n = <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> X, y <span class="keyword">in</span> train_iter:</span><br><span class="line">            X = X.copyto(mx.gpu())</span><br><span class="line">            y = y.copyto(mx.gpu())</span><br><span class="line">            <span class="keyword">with</span> autograd.record():</span><br><span class="line">                y_hat = net(X)</span><br><span class="line">                los = loss(y_hat, y).<span class="built_in">sum</span>()</span><br><span class="line">            <span class="comment"># 求梯度</span></span><br><span class="line">            los.backward()</span><br><span class="line">            <span class="keyword">if</span> trainer <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">                <span class="comment"># 小批量随机梯度下降</span></span><br><span class="line">                d2l.sgd(params, lr, batch_size)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                trainer.step(batch_size)</span><br><span class="line">            train_loss_sum += los.asscalar()</span><br><span class="line">            train_acc_sum += (y_hat.argmax(axis=<span class="number">1</span>) == y.astype(<span class="string">&#x27;float32&#x27;</span>)).<span class="built_in">sum</span>().asscalar()</span><br><span class="line">            n += y.size</span><br><span class="line">        test_acc = evaluate_accuracy(test_iter,net)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;epoch %d, loss %.4f, train acc %.3f, test acc %.3f&#x27;</span></span><br><span class="line">              % (epoch + <span class="number">1</span>, train_loss_sum / n, train_acc_sum / n,test_acc))</span><br><span class="line"> </span><br><span class="line">train_ch3(net,train_iter,test_iter,loss,num_epochs,batch_size,<span class="literal">None</span>,<span class="literal">None</span>,trainer)</span><br></pre></td></tr></table></figure>
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">softmax回归</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/10/19/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92gpu/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-深度学习softmax回归" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/">深度学习softmax回归</a>
+    </h1>
+  
+
+        
+        <a href="/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/" class="archive-article-date">
+  	<time datetime="2020-10-15T10:53:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-10-15</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>softmax回归预测多分类问题，预测值的输出为每一个样本所属q个类别的概率，比如一个样本有三个类别，则输出可能为[0.1, 0.8, 0.1],表示该样本属于第二个类别。</p>
+<p>花书中的softmax回归介绍相对简单，主要思想是使用softmax函数将预测值转化为值为正且和为1的概率</p>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">softmax回归</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/10/15/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0softmax%E5%9B%9E%E5%BD%92/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-深度学习线性回归简易实现代码gpu版" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%AE%80%E6%98%93%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81gpu%E7%89%88/">深度学习线性回归简易实现代码gpu版</a>
+    </h1>
+  
+
+        
+        <a href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%AE%80%E6%98%93%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81gpu%E7%89%88/" class="archive-article-date">
+  	<time datetime="2020-10-10T12:03:59.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-10-10</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>代码为深度学习一书线性回归使用python库版本的代码，使用gpu时首先将数据全部存储在gpu，<br>注意在提取小批量数据集时的函数默认将生成的数据存储在cpu，所以需要在使用时转到gpu，具体为代码</p>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">线性回归</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%AE%80%E6%98%93%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81gpu%E7%89%88/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-深度学习线性回归从零实现代码实现gpu版" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0gpu%E7%89%88/">深度学习线性回归从零实现代码实现gpu版</a>
+    </h1>
+  
+
+        
+        <a href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0gpu%E7%89%88/" class="archive-article-date">
+  	<time datetime="2020-10-10T12:03:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-10-10</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文代码为深度学习一书线性回归从零实现对应代码的gpu版本，只需将默认存储在cpu的数据改为存储在gpu即可自动在gpu进行计算</p>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">深度学习</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gpu</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">线性回归</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/10/10/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0gpu%E7%89%88/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
   
 
 
@@ -339,6 +668,22 @@ MathJax.Hub.Queue(function() {
             <input type="checkbox" q-on="click:toggleTag(e)" q-attr="checked:showTags">
           </label>
           <ul class="article-tag-list" q-show="showTags">
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">深度学习</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">softmax回归</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">gpu</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">线性回归</a>
+              </li>
             
             <div class="clearfix"></div>
           </ul>
